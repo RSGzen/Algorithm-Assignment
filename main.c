@@ -1,10 +1,18 @@
 #include <stdio.h> // Standard input output library for scanning user inputs
 #include <stdlib.h>
 #include <stdbool.h> // Boolean library for loop flags
+#include <string.h> // String library
+#include <time.h> // Time library for random ID generation
 
 #define MAX_HOTELS_NUM 50
-#define MAX_NAME_CHARS 50
+#define MAX_NAME_CHARS 51
 #define INF 999999
+
+// It ain't much work but it's honest work
+void printLine()
+{
+    printf("\n---------------------------------");
+}
 
 // Obtain user input and converts it to type integer
 // Check for whether integer is between lower bound and upper bound
@@ -19,23 +27,34 @@ int userInputInt(char* input_message, int lower_bound, int upper_bound)
     {
         printf("\n%s", input_message);
         
-        fgets(user_input_str, 10, stdin);
-
+        if (fgets(user_input_str, 10, stdin) != NULL) // fgets would not return NULL if read until max character limits
+        {
+            if (strchr(user_input_str, '\n') == NULL) // Check if the newline char was found indicating until max characters was read
+            {
+                // If no newline character to be found, more characters are inputted than the allowed limit
+                while (getchar() != '\n'); // Discard remaining characters in the input buffer until the newline
+            }
+        }
+        
         user_input = atoi(user_input_str);
 
         if (user_input == 0) // No numbers detected in user input
         {
             printf("\nError. Please enter a number.\n");
+            printLine();
         }
-
-        if (user_input >= lower_bound && user_input <= upper_bound)
+        else
+        {
+            if (user_input >= lower_bound && user_input <= upper_bound)
         {
             return user_input;
         }
 
-        else // Numbers inputed are not between lower bound and upper bound
-        {
-            printf("\nError. You can only enter a number from %d - %d.\n", lower_bound, upper_bound);
+            else // Numbers inputed are not between lower bound and upper bound
+            {
+                printf("\nError. You can only enter a number from %d - %d.\n", lower_bound, upper_bound);
+                printLine();
+            }
         }
     }
 }
@@ -46,27 +65,57 @@ void userInputString(char* input_message, char** arr_to_store, int current_hotel
     
     printf("\n%s", input_message);
 
-    fgets(arr_to_store[current_hotel_idx], MAX_NAME_CHARS-1, stdin);
+    if (fgets(user_input_str, MAX_NAME_CHARS, stdin) != NULL) // Check if there are more characters inputted than the chars read by fgets
+    {
+        if (strchr(user_input_str, '\n') == NULL) // Check if the newline char was found indicating until max characters was read
+        {
+            // If no newline character to be found, more characters are inputted than the allowed limit
+            while (getchar() != '\n'); // Discard remaining characters in the input buffer until the newline
+        }
+    }
+
+    // Replace the character with null character it so that when printing it would not affect the format
+    
+    bool checkIfStrIsFull = true;
+
+    for (int i = 0; i < MAX_NAME_CHARS; i++)
+    {
+        if (user_input_str[i] == '\n')
+        {
+            user_input_str[i] = '\0';
+            checkIfStrIsFull = false;
+        }
+    }
+
+    if (checkIfStrIsFull == true)
+    {
+        user_input_str[MAX_NAME_CHARS-1] = '\0';
+    }
+
+    // Copy input into the array
+    strcpy(arr_to_store[current_hotel_idx], user_input_str);
 }
 
 // Display the menu and read user input 
 // Returns user input
 int displayMenuAndReadInput()
 {
-    printf("\n===== Smart Travel Planner System =====\n");
-    printf("1. Add Hotel\n");
-    printf("2. View All Hotels\n");
-    printf("3. Sort Hotels by Price (Bubble Sort)\n");
-    printf("4. Sort Hotels by Rating (Merge Sort)\n");
-    printf("5. Search Hotel by Name (Binary Search)\n");
-    printf("6. Select Optimal Hotels within Budget (Knapsack)\n");
-    printf("7. Add Path between Hotels\n");
-    printf("8. Find Shortest Path Between Hotels (Dijkstra)\n");
-    printf("9. Exit\n");
+    printf("\n======================================== Smart Travel Planner System =========================================\n\n");
+    printf("\t1. Add Hotel\n");
+    printf("\t2. View All Hotels\n");
+    printf("\t3. Sort Hotels by Price (Bubble Sort)\n");
+    printf("\t4. Sort Hotels by Rating (Merge Sort)\n");
+    printf("\t5. Search Hotel by Name (Binary Search)\n");
+    printf("\t6. Select Optimal Hotels within Budget (Knapsack)\n");
+    printf("\t7. Add Path between Hotels\n");
+    printf("\t8. Find Shortest Path Between Hotels (Dijkstra)\n");
+    printf("\t9. Exit\n");
     
     char message[] = "Enter your choice: ";
 
     int user_input = userInputInt(message, 1, 9);
+
+    printf("\n========================================      Now in Choice %d      =========================================\n", user_input);
 
     return user_input;
 }
@@ -101,7 +150,7 @@ int addHotels(int current_num_hotels, int* hotel_id, char** hotel_name, int* hot
     // Obtain user input about the amount of hotels to record at a time
     int num_hotels = userInputInt(message, 1, 10);
 
-    char message_name[] = "Enter the name of hotel: ";
+    char message_name[] = "Enter the name of hotel (Max 50 characters): ";
     char message_price[] = "Enter the price of hotel (without cents): ";
     char message_rating[] = "Enter the rating of hotel (stars): ";
     char message_distance[] = "Enter the distance of hotel from city center (meters): ";
@@ -110,8 +159,11 @@ int addHotels(int current_num_hotels, int* hotel_id, char** hotel_name, int* hot
     {
         printf("\n------- Details of Hotel %d -------\n", i+1);
 
+        // Use current time as seed
+        srand(time(NULL));
+
         // Generate a random number for ID and stored
-        hotel_id[i] = rand();
+        hotel_id[i] = rand(); 
 
         // User input hotel name and stored
         userInputString(message_name, hotel_name, i);
@@ -137,22 +189,31 @@ int addHotels(int current_num_hotels, int* hotel_id, char** hotel_name, int* hot
     return current_num_hotels;
 }
 
-void viewHotels(int current_num_hotels, char** hotel_name, int* hotel_price, int* hotel_rating, int* hotel_cityCenter_dist)
+// Function to view hotel from the perspective of number, ID, name, price, rating, distance from city center
+void viewHotels(int current_num_hotels, int* hotel_id, char** hotel_name, int* hotel_price, int* hotel_rating, int* hotel_cityCenter_dist)
 {
     // If current number of hotels are 0, do not print viewing table
     if (current_num_hotels != 0)
     {
-        printf("\n~~~~~~~~~~~~~ Details of Hotels ~~~~~~~~~~~~~\n");
-        pritnf("\n");
-        
+        printf("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Details of Hotels ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+        printf("| No. |     ID     |                     Hotel Name                     |   Price  | Rating |  Distance |\n");
+
         for (int i = 0; i < current_num_hotels; i++)
         {
-            printf("\n%d");
+            printf("| %-2d  |", i+1); // Print No.
+            printf(" %-10d |", hotel_id[i]); // Print hotel ID
+            printf(" %-50s |", hotel_name[i]);
+            printf(" RM %-5d |", hotel_price[i]);
+            printf(" %d star |", hotel_rating[i]);
+            printf("  %-5d m  |\n", hotel_cityCenter_dist[i]);
         }
+        printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
     }
+
     else
     {
         printf("\nCurrent number of hotels are 0.\n Please enter hotel informations before viewing.\n");
+        printLine();
     }
 }
 
@@ -202,7 +263,8 @@ int main()
             break;
         
         case 2:
-            printf("\nIn 2\n");
+            viewHotels(current_num_hotels, hotel_id, hotel_name, hotel_price, hotel_rating, hotel_cityCenter_dist);
+
             break;
         
         case 3:
