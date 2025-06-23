@@ -199,7 +199,7 @@ void addPathToHotels(int current_num_hotels, char** hotel_name, int** hotel_path
 
         for (int i = 0; i < current_num_hotels; i++)
         {
-            printf("%-2d. %-50s\n", i+1, hotel_name[i]);    
+            printf("| %-2d. | %-50s |\n", i+1, hotel_name[i]);    
         }
 
         char message1[] = "Enter your first choice of hotel: ";
