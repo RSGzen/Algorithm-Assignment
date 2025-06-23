@@ -6,7 +6,7 @@
 
 #define MAX_HOTELS_NUM 50
 #define MAX_NAME_CHARS 51
-#define INF 999999
+#define INF 99999
 
 // It ain't much work but it's honest work
 void printLine()
@@ -189,8 +189,60 @@ int addHotels(int current_num_hotels, int* hotel_id, char** hotel_name, int* hot
     return current_num_hotels;
 }
 
+void addPathToHotels(int current_num_hotels, char** hotel_name, int** hotel_paths)
+{
+    // Check if current number of hotels are greater than or equal to 2 if not then path cannot be established
+    if (current_num_hotels >= 2)
+    {
+        // Print out hotels name to choose from
+        printf("\n| No. |                     Hotel Name                     |\n");
+
+        for (int i = 0; i < current_num_hotels; i++)
+        {
+            printf("%-2d. %-50s\n", i+1, hotel_name[i]);    
+        }
+
+        char message1[] = "Enter your first choice of hotel: ";
+        char message2[] = "Enter your second choice of hotel: ";
+
+        // Obtain first hotel choice input
+        int user_first_input = userInputInt(message1, 1, current_num_hotels);
+        int user_second_input;
+
+        while (true)
+        {
+            // Obtain second hotel choice input
+            user_second_input = userInputInt(message2, 1, current_num_hotels);
+
+            // Break out of loop if both inputs are not same
+            if (user_first_input != user_second_input)
+            {
+                break;
+            }
+            else
+            {
+                printf("\nThe hotels choosen cannot be the same. \nPlease try again.\n");
+            }
+        }
+
+        char message3[] = "Enter the distance of the path between 2 hotels choosen (1m - 10000m): ";
+
+        int user_dist_input = userInputInt(message3, 1, 10000);
+
+        hotel_paths[user_first_input-1][user_second_input-1] = user_dist_input;
+        hotel_paths[user_second_input-1][user_first_input-1] = user_dist_input;
+
+        printf("\nSucessfully recorded. \n");
+
+    }
+    else
+    {
+        printf("\nCurrent number of hotels recorded are less than 2.\n You cannot establish any path between hotels.\n");
+    }
+}
+
 // Function to view hotel from the perspective of number, ID, name, price, rating, distance from city center
-void viewHotels(int current_num_hotels, int* hotel_id, char** hotel_name, int* hotel_price, int* hotel_rating, int* hotel_cityCenter_dist)
+void viewHotels(int current_num_hotels, int* hotel_id, char** hotel_name, int* hotel_price, int* hotel_rating, int* hotel_cityCenter_dist, int** hotel_paths)
 {
     // If current number of hotels are 0, do not print viewing table
     if (current_num_hotels != 0)
@@ -207,6 +259,32 @@ void viewHotels(int current_num_hotels, int* hotel_id, char** hotel_name, int* h
             printf(" %d star |", hotel_rating[i]);
             printf("  %-5d m  |\n", hotel_cityCenter_dist[i]);
         }
+        printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+
+
+        printf("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Distance Between Hotels ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+
+        printf("|      ");
+
+        for (int i = 0; i < current_num_hotels; i++)
+        {
+            printf("|  %-2d   ", i+1);
+        }
+
+        printf("|\n");
+
+        for (int i = 0; i < current_num_hotels; i++)
+        {
+            printf("| %-2d   ", i+1);
+
+            for (int j = 0; j < current_num_hotels; j++)
+            {
+                printf("| %-5d ", hotel_paths[i][j]);
+            }
+
+            printf("|\n");
+        }
+        printf("\n*Note: 99999 means path between 2 hotels are non-existance\n");
         printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
     }
 
@@ -248,6 +326,15 @@ int main()
         hotel_paths[i] = (int *)malloc(MAX_HOTELS_NUM * sizeof(int));
     }
 
+    // Initialize all hotel paths to be non-existent by using self declared infinity 
+    for (int i = 0; i < MAX_HOTELS_NUM; i++)
+    {
+        for (int j = 0; j < MAX_HOTELS_NUM; j++)
+        {
+            hotel_paths[i][j] = INF;
+        }
+    }
+
     // Boolean flag to check whether to keep running the menu program
     bool menu_loop_flag = true;
 
@@ -263,7 +350,7 @@ int main()
             break;
         
         case 2:
-            viewHotels(current_num_hotels, hotel_id, hotel_name, hotel_price, hotel_rating, hotel_cityCenter_dist);
+            viewHotels(current_num_hotels, hotel_id, hotel_name, hotel_price, hotel_rating, hotel_cityCenter_dist, hotel_paths);
 
             break;
         
@@ -284,7 +371,8 @@ int main()
             break;
         
         case 7:
-            printf("\nIn 7\n");
+            addPathToHotels(current_num_hotels, hotel_name, hotel_paths);
+
             break;
         
         case 8:
