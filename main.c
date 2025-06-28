@@ -5,8 +5,8 @@
 #include <time.h> // Time library for random ID generation
 #include <ctype.h> // For use in the strcasecmp function
 
-#define MAX_HOTELS_NUM 50
-#define MAX_NAME_CHARS 51
+#define MAX_HOTELS_NUM 50 // Maximum number of hotels predefined
+#define MAX_NAME_CHARS 51 // Maximum number of characters allowed per hotel name (50 chars + 1 null character)
 #define INF 99999
 
 // It ain't much work but it's honest work
@@ -154,6 +154,15 @@ int addHotels(int current_num_hotels, int* hotel_id, char** hotel_name, int* hot
 
     // Obtain user input about the amount of hotels to record at a time
     int num_hotels = userInputInt(message, 1, 10);
+
+    // Check whether 
+    if (num_hotels + current_num_hotels > MAX_HOTELS_NUM)
+    {
+        printf("\nNumber of hotels data wished to enter has exceed database limits");
+        printf("\nMaximum number of hotel data permitted to saved in database is %d hotels.\n", MAX_HOTELS_NUM);
+        
+        return MAX_HOTELS_NUM;
+    }
 
     char message_name[] = "Enter the name of hotel (Max 50 characters): ";
     char message_price[] = "Enter the price of hotel (without cents): ";
