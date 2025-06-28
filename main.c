@@ -3,6 +3,7 @@
 #include <stdbool.h> // Boolean library for loop flags
 #include <string.h> // String library
 #include <time.h> // Time library for random ID generation
+#include <ctype.h> // For use in the strcasecmp function
 
 #define MAX_HOTELS_NUM 50
 #define MAX_NAME_CHARS 51
@@ -127,8 +128,10 @@ void freeAllPointers(int* hotel_id, char** hotel_name, int* hotel_price, int* ho
     
     for (int i = 0; i < MAX_HOTELS_NUM; i++)
     {
-        free(&(hotel_name[i]));
+        free(hotel_name[i]);
     }
+
+    free(hotel_name);
 
     free(hotel_price);
 
@@ -138,8 +141,10 @@ void freeAllPointers(int* hotel_id, char** hotel_name, int* hotel_price, int* ho
 
     for (int i = 0; i < MAX_HOTELS_NUM; i++)
     {
-        free(&(hotel_paths[i]));
+        free(hotel_paths[i]);
     }
+
+    free(hotel_paths);
 }
 
 // Function to add hotels and input their information
@@ -155,7 +160,7 @@ int addHotels(int current_num_hotels, int* hotel_id, char** hotel_name, int* hot
     char message_rating[] = "Enter the rating of hotel (stars): ";
     char message_distance[] = "Enter the distance of hotel from city center (meters): ";
     
-    for (int i = current_num_hotels; i < num_hotels ; i++)
+    for (int i = current_num_hotels; i < num_hotels + current_num_hotels; i++)
     {
         printf("\n------- Details of Hotel %d -------\n", i+1);
 
@@ -294,6 +299,580 @@ void viewHotels(int current_num_hotels, int* hotel_id, char** hotel_name, int* h
         printLine();
     }
 }
+void viewSortSearchHotels(int current_num_hotels, int* hotel_id, char** hotel_name, int* hotel_price, int* hotel_rating, int* hotel_cityCenter_dist)
+{
+    // If current number of hotels are 0, do not print viewing table
+    if (current_num_hotels != 0)
+    {
+        printf("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Details of Hotels ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+        printf("| No. |     ID     |                     Hotel Name                     |   Price  | Rating |  Distance |\n");
+
+        for (int i = 0; i < current_num_hotels; i++)
+        {
+            printf("| %-2d  |", i+1); // Print No.
+            printf(" %-10d |", hotel_id[i]); // Print hotel ID
+            printf(" %-50s |", hotel_name[i]);
+            printf(" RM %-5d |", hotel_price[i]);
+            printf(" %d star |", hotel_rating[i]);
+            printf("  %-5d m  |\n", hotel_cityCenter_dist[i]);
+        }
+        printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+    }
+
+    else
+    {
+        printf("\nCurrent number of hotels are 0.\n Please enter hotel informations before viewing.\n");
+        printLine();
+    }
+}
+
+void createTempHotelData(int current_num_hotels, int* hotel_id, char** hotel_name, int* hotel_price, int* hotel_rating, int* hotel_cityCenter_dist, int** temp_id, char*** temp_name, int** temp_price, int** temp_rating, int** temp_dist) {
+    // Allocate memory
+    *temp_id = (int*)malloc(current_num_hotels * sizeof(int));
+    *temp_price = (int*)malloc(current_num_hotels * sizeof(int));
+    *temp_rating = (int*)malloc(current_num_hotels * sizeof(int));
+    *temp_dist = (int*)malloc(current_num_hotels * sizeof(int));
+    *temp_name = (char**)malloc(current_num_hotels * sizeof(char*));
+
+
+    for (int i = 0; i < current_num_hotels; i++) {
+        (*temp_id)[i] = hotel_id[i];
+        (*temp_price)[i] = hotel_price[i];
+        (*temp_rating)[i] = hotel_rating[i];
+        (*temp_dist)[i] = hotel_cityCenter_dist[i];
+
+        (*temp_name)[i] = (char*)malloc((MAX_NAME_CHARS + 1) * sizeof(char));
+        strcpy((*temp_name)[i], hotel_name[i]);
+    }
+}
+
+void freeTempHotelData(int current_num_hotels, int* temp_id, char** temp_name, int* temp_price, int* temp_rating, int* temp_dist) {
+    for (int i = 0; i < current_num_hotels; i++) {
+        free(temp_name[i]);
+    }
+
+    free(temp_name);
+    free(temp_id);
+    free(temp_price);
+    free(temp_rating);
+    free(temp_dist);
+}
+
+
+void BubleSort(int current_num_hotels, int* temp_id, char** temp_name, int* temp_price, int* temp_rating, int* temp_dist) {
+    for(int i = 0; i < current_num_hotels - 1; i++) {  // Changed to current_num_hotels - 1
+        for(int j = 0; j < current_num_hotels - i - 1; j++) {  // Changed to current_num_hotels - i - 1
+            if(temp_price[j] > temp_price[j+1]) {
+                // Swap IDs
+                int ti = temp_id[j];
+                temp_id[j] = temp_id[j+1];
+                temp_id[j+1] = ti;
+
+                // Swap prices
+                int tp = temp_price[j];
+                temp_price[j] = temp_price[j+1];
+                temp_price[j+1] = tp;
+
+                // Swap names - use strcpy with properly allocated memory
+                char* tn = temp_name[j];
+                temp_name[j] = temp_name[j+1];
+                temp_name[j+1] = tn;
+
+                // Swap ratings
+                int tr = temp_rating[j];
+                temp_rating[j] = temp_rating[j+1];
+                temp_rating[j+1] = tr;
+
+                // Swap distances
+                int td = temp_dist[j];
+                temp_dist[j] = temp_dist[j+1];
+                temp_dist[j+1] = td;
+            }
+        }
+    }
+
+    viewSortSearchHotels(current_num_hotels, temp_id, temp_name, temp_price, temp_rating, temp_dist);
+}
+
+// Re-wrote strcasecmp function due to it not available in the C standard library for certain standards
+int strcasecmp_rewrite(const char *s1, const char *s2)
+{
+    int offset,ch;
+    unsigned char a,b;
+
+    offset = 0;
+    ch = 0;
+    while( *(s1+offset) != '\0' )
+    {
+        /* Check for end of s2 */
+        if( *(s2+offset)=='\0')
+            return( *(s1+offset) );
+
+        a = (unsigned)*(s1+offset);
+        b = (unsigned)*(s2+offset);
+        ch = toupper(a) - toupper(b);
+        if( ch<0 || ch>0 )
+            return(ch);
+        offset++;
+    }
+
+    return(ch);
+}
+
+// Function to allocate memory on heap for an array of integer
+int* int_array_allocate(int array_size)
+{
+    int* array_pointer = (int*)malloc(array_size * sizeof(int));
+
+    return array_pointer;
+}
+
+// Function to allocate memory on heap for an array of characters
+char** char_array_allocate(int array_size)
+{   
+    char** array_pointer = (char**)malloc(array_size * sizeof(char*));
+
+    return array_pointer;
+}
+
+// Function to free all temp array pointers
+void freeMergeTempPointers(int* L_id, int* R_id, int* L_price, int* R_price, int* L_rating, int* R_rating, int* L_dist, int* R_dist, char** L_name, char** R_name, int n1, int n2)
+{
+    free(L_id);
+    free(R_id);
+
+    free(L_price);
+    free(R_price);
+
+    free(L_rating);
+    free(R_rating);
+
+    free(L_dist);
+    free(R_dist);
+
+    for (int i = 0; i < n1; i++)
+    {
+        free(L_name[i]);
+    }
+
+    for (int i = 0; i < n2; i++)
+    {
+        free(R_name[i]);
+    }
+
+    free(L_name);
+    free(R_name);
+}
+
+void mergeByRating(int left, int mid, int right, int* temp_id, char** temp_name, int* temp_price, int* temp_rating, int* temp_dist){
+    int n1 = mid - left + 1;
+    int n2 = right - mid;
+
+    // Temp arrays
+    int* L_id = int_array_allocate(n1);
+    int* R_id = int_array_allocate(n2);
+
+    int* L_price = int_array_allocate(n1);
+    int* R_price = int_array_allocate(n2);
+
+    int* L_rating = int_array_allocate(n1);
+    int* R_rating = int_array_allocate(n2);
+
+    int* L_dist = int_array_allocate(n1);
+    int* R_dist = int_array_allocate(n2);
+
+    char** L_name = char_array_allocate(n1);
+    char** R_name = char_array_allocate(n2);
+
+    for (int i = 0; i < n1; i++) {
+        L_id[i] = temp_id[left + i];
+        L_price[i] = temp_price[left + i];
+        L_rating[i] = temp_rating[left + i];
+        L_dist[i] = temp_dist[left + i];
+        L_name[i] = strdup(temp_name[left + i]);
+    }
+
+    for (int j = 0; j < n2; j++) {
+        R_id[j] = temp_id[mid + 1 + j];
+        R_price[j] = temp_price[mid + 1 + j];
+        R_rating[j] = temp_rating[mid + 1 + j];
+        R_dist[j] = temp_dist[mid + 1 + j];
+        R_name[j] = strdup(temp_name[mid + 1 + j]);
+    }
+
+    int i = 0, j = 0, k = left;
+
+    while (i < n1 && j < n2) {
+        if (L_rating[i] >= R_rating[j]) {
+            temp_id[k] = L_id[i];
+            temp_price[k] = L_price[i];
+            temp_rating[k] = L_rating[i];
+            temp_dist[k] = L_dist[i];
+            strcpy(temp_name[k], L_name[i]);
+            i++;
+        } else {
+            temp_id[k] = R_id[j];
+            temp_price[k] = R_price[j];
+            temp_rating[k] = R_rating[j];
+            temp_dist[k] = R_dist[j];
+            strcpy(temp_name[k], R_name[j]);
+            j++;
+        }
+        k++;
+    }
+
+    while (i < n1) {
+        temp_id[k] = L_id[i];
+        temp_price[k] = L_price[i];
+        temp_rating[k] = L_rating[i];
+        temp_dist[k] = L_dist[i];
+        strcpy(temp_name[k], L_name[i]);
+        i++; k++;
+    }
+
+    while (j < n2) {
+        temp_id[k] = R_id[j];
+        temp_price[k] = R_price[j];
+        temp_rating[k] = R_rating[j];
+        temp_dist[k] = R_dist[j];
+        strcpy(temp_name[k], R_name[j]);
+        j++; k++;
+    }
+
+    freeMergeTempPointers(L_id, R_id, L_price, R_price, L_rating, R_rating, L_dist, R_dist, L_name, R_name, n1, n2);
+}
+
+void mergeSortByRating(int left, int right, int* temp_id, char** temp_name, int* temp_price, int* temp_rating, int* temp_dist){
+    if (left < right) {
+        int mid = left + (right - left) / 2;
+        mergeSortByRating(left, mid, temp_id, temp_name, temp_price, temp_rating, temp_dist);
+        mergeSortByRating(mid + 1, right, temp_id, temp_name, temp_price, temp_rating, temp_dist);
+        mergeByRating(left, mid, right, temp_id, temp_name, temp_price, temp_rating, temp_dist);
+    }
+}
+
+void SortByRatingUsingMerge(
+    int current_num_hotels,
+    int* hotel_id, char** hotel_name, int* hotel_price,
+    int* hotel_rating, int* hotel_cityCenter_dist
+) {
+    if (current_num_hotels == 0) {
+        printf("\nNo hotels available to sort.\n");
+        return;
+    }
+
+    // Create temp data
+    int *temp_id, *temp_price, *temp_rating, *temp_dist;
+    char **temp_name;
+
+    createTempHotelData(current_num_hotels, hotel_id, hotel_name, hotel_price, hotel_rating, hotel_cityCenter_dist,
+                        &temp_id, &temp_name, &temp_price, &temp_rating, &temp_dist);
+
+    // Perform merge sort by rating
+    mergeSortByRating(0, current_num_hotels - 1, temp_id, temp_name, temp_price, temp_rating, temp_dist);
+
+    // Display sorted results
+    viewSortSearchHotels(current_num_hotels, temp_id, temp_name, temp_price, temp_rating, temp_dist);
+
+    // Free temp data
+    freeTempHotelData(current_num_hotels, temp_id, temp_name, temp_price, temp_rating, temp_dist);
+}
+
+int binarySearchByName(char** temp_name, int current_num_hotels, char* target_name) {
+    int left = 0, right = current_num_hotels - 1;
+
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+        int cmp = strcasecmp_rewrite(temp_name[mid], target_name);
+
+        if (cmp == 0)
+            return mid;
+        else if (cmp < 0)
+            left = mid + 1;
+        else
+            right = mid - 1;
+    }
+    return -1;
+}
+
+void mergeByName(
+    int left, int mid, int right,
+    int* id, char** name, int* price, int* rating, int* dist
+) {
+    int n1 = mid - left + 1;
+    int n2 = right - mid;
+
+    // Temp arrays
+    int* L_id = int_array_allocate(n1);
+    int* R_id = int_array_allocate(n2);
+
+    int* L_price = int_array_allocate(n1);
+    int* R_price = int_array_allocate(n2);
+
+    int* L_rating = int_array_allocate(n1);
+    int* R_rating = int_array_allocate(n2);
+
+    int* L_dist = int_array_allocate(n1);
+    int* R_dist = int_array_allocate(n2);
+
+    char** L_name = char_array_allocate(n1);
+    char** R_name = char_array_allocate(n2);
+
+    for (int i = 0; i < n1; i++) {
+        L_id[i] = id[left + i];
+        L_price[i] = price[left + i];
+        L_rating[i] = rating[left + i];
+        L_dist[i] = dist[left + i];
+        L_name[i] = strdup(name[left + i]);
+    }
+    for (int j = 0; j < n2; j++) {
+        R_id[j] = id[mid + 1 + j];
+        R_price[j] = price[mid + 1 + j];
+        R_rating[j] = rating[mid + 1 + j];
+        R_dist[j] = dist[mid + 1 + j];
+        R_name[j] = strdup(name[mid + 1 + j]);
+    }
+
+    int i = 0, j = 0, k = left;
+
+    while (i < n1 && j < n2) {
+        if (strcasecmp_rewrite(L_name[i], R_name[j]) <= 0) {
+            id[k] = L_id[i];
+            price[k] = L_price[i];
+            rating[k] = L_rating[i];
+            dist[k] = L_dist[i];
+            strcpy(name[k], L_name[i]);
+            i++;
+        } else {
+            id[k] = R_id[j];
+            price[k] = R_price[j];
+            rating[k] = R_rating[j];
+            dist[k] = R_dist[j];
+            strcpy(name[k], R_name[j]);
+            j++;
+        }
+        k++;
+    }
+
+    while (i < n1) {
+        id[k] = L_id[i]; price[k] = L_price[i]; rating[k] = L_rating[i]; dist[k] = L_dist[i];
+        strcpy(name[k], L_name[i]); i++; k++;
+    }
+    while (j < n2) {
+        id[k] = R_id[j]; price[k] = R_price[j]; rating[k] = R_rating[j]; dist[k] = R_dist[j];
+        strcpy(name[k], R_name[j]); j++; k++;
+    }
+
+    freeMergeTempPointers(L_id, R_id, L_price, R_price, L_rating, R_rating, L_dist, R_dist, L_name, R_name, n1, n2);
+}
+
+void mergeSortByName(int left, int right, int* id, char** name, int* price, int* rating, int* dist) {
+    if (left < right) {
+        int mid = left + (right - left) / 2;
+        mergeSortByName(left, mid, id, name, price, rating, dist);
+        mergeSortByName(mid + 1, right, id, name, price, rating, dist);
+        mergeByName(left, mid, right, id, name, price, rating, dist);
+    }
+}
+
+void searchHotelByName(int current_num_hotels, int* hotel_id, char** hotel_name, int* hotel_price, int* hotel_rating, int* hotel_cityCenter_dist) {
+    if (current_num_hotels == 0) {
+        printf("\nNo hotels to search.\n");
+        return;
+    }
+
+    char target_name[MAX_NAME_CHARS];
+    printf("\nEnter the name of hotel to search: ");
+    fgets(target_name, MAX_NAME_CHARS, stdin);
+    if (strchr(target_name, '\n')) *strchr(target_name, '\n') = '\0'; // Remove newline
+
+    // Prepare temp data
+    int *temp_id, *temp_price, *temp_rating, *temp_dist;
+    char **temp_name;
+
+    createTempHotelData(current_num_hotels, hotel_id, hotel_name, hotel_price, hotel_rating, hotel_cityCenter_dist,
+                        &temp_id, &temp_name, &temp_price, &temp_rating, &temp_dist);
+
+    // Sort by name first
+    mergeSortByName(0, current_num_hotels - 1, temp_id, temp_name, temp_price, temp_rating, temp_dist);
+
+    // Perform binary search
+    int idx = binarySearchByName(temp_name, current_num_hotels, target_name);
+
+    if (idx != -1) {
+        printf("\nHotel found!\n");
+        printf("|     ID     |                     Hotel Name                     |   Price  | Rating |  Distance |\n");
+        printf("| %-10d | %-50s | RM %-5d | %d star |  %-5d m  |\n",
+               temp_id[idx], temp_name[idx], temp_price[idx], temp_rating[idx], temp_dist[idx]);
+    } else {
+        printf("\nHotel '%s' not found.\n", target_name);
+    }
+
+    // Cleanup
+    freeTempHotelData(current_num_hotels, temp_id, temp_name, temp_price, temp_rating, temp_dist);
+}
+
+// Knapsack function to select best combination of hotels within budget
+void knapsack(int n, int budget, int *prices, int *ratings, char **hotel_name, int *selected) {
+
+    // Create DP table
+    int **dp = (int **)malloc((n + 1) * sizeof(int *));
+    for (int i = 0; i <= n; i++) {
+        dp[i] = (int *)malloc((budget + 1) * sizeof(int));
+    }
+
+    // Initialize DP table
+    for (int row = 0; row <= n; row++) {
+        for (int col = 0; col <= budget; col++) {
+            if (row == 0 || col == 0) {
+                //if both col and row is 0 then value is 0
+                dp[row][col] = 0;
+            } 
+            
+            else if (prices[row - 1] <= col) {   
+
+                // 2 variable used to determine if the hotel is included
+                // (current hotel rating + prev row's remaining money,col) comapre (value at the col above)
+                int include = ratings[row - 1] + dp[row - 1][col - prices[row - 1]];  
+                int exclude = dp[row - 1][col];
+
+                if (include > exclude){  //choose the larger
+                    dp[row][col] = include;
+                } else{
+                    dp[row][col] = exclude;
+                }
+
+            } else {  //current price > col 
+                dp[row][col] = dp[row - 1][col];  //copy value from the above row
+            }
+        }
+    }
+
+    // Backtrack to find selected hotels
+    int row = n, col = budget; //(start from the last element in the table)
+    while (row > 0 && col >= 0) {
+        if (row == 0 || col == 0) break;
+
+        if (dp[row][col] == dp[row - 1][col]) { //it means current hotel is not included
+            row--;
+
+        } else {                                //it means current hotel is included
+            selected[row - 1] = 1;  //mark current hotal as include
+            col -= prices[row - 1]; //go to the remaining money, col
+            row--;
+        }
+    }
+
+    // Print results
+    printf("\nMaximum rating achievable: %d\n", dp[n][budget]);
+    
+    int any_selected = 0;
+    printf("\n");
+    printf("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Selected Hotel for Knapsnack~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+    printf("| No. |                  Hotel Name                        |  Price      |   Rating    |\n");
+    for (int i = 0; i < n; i++) {
+        if (selected[i]) {
+            printf("| %-2d  |", i+1);
+            printf(" %-50s |",hotel_name[i]);
+            printf("  %-10d |",prices[i] );
+            printf("  %-10d |\n",ratings[i] );
+            any_selected = 1;
+        }
+    }
+    if (!any_selected) {
+        printf("None");
+    }
+    printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+
+    // Free allocated memory
+    for (int i = 0; i <= n; i++) {
+        free(dp[i]);
+    }
+    free(dp);
+}
+
+// Find shortest distance between hotels using Dijkstra's Algorithm
+int dijkstra(int** adjMatrix, int numHotels, int start, int end, int*prev ) {
+    int visited[MAX_HOTELS_NUM] = {0}; // track which hotel have been visited
+    int distance[MAX_HOTELS_NUM]; // store shortest distance 
+
+    for (int i = 0; i < numHotels; i++) {
+        distance[i] = INF; 
+        prev[i] = -1; // -1 means no value yet
+    }
+    distance[start] = 0; // set distance at starting point 0
+
+    for (int count = 0; count < numHotels - 1; count++) {
+        int minDist = INF, u = -1;
+        for (int i = 0; i < numHotels; i++) {
+            if (!visited[i] && distance[i] < minDist) { // find the smallest distance between unvisited hotels
+                minDist = distance[i];
+                u = i;
+            }
+        }
+
+        if (u == -1 || u == end) break; // if no hotel found or at ending point , it will break 
+
+        visited[u] = 1; // mark hotel u visited 
+
+        for (int v = 0; v < numHotels; v++) { //check the path through u is shorter than the current distance v
+            if (!visited[v] && adjMatrix[u][v] != INF && distance[u] + adjMatrix[u][v] < distance[v]) {
+                distance[v] = distance[u] + adjMatrix[u][v];
+                prev[v] = u;// to set u as the previous path in prev[v]
+            }
+        }
+    }
+
+    return distance[end]; //return shortest distance to the end, else it will be INF
+}
+
+// Find shortest path between hotels
+void findShortestPath(int current_num_hotels, char** hotel_name, int** hotel_paths) {
+    if (current_num_hotels >= 2) { // make sure there is at least 2 hotel 
+        printf("\n| No. |                     Hotel Name                     |\n");
+        for (int i = 0; i < current_num_hotels; i++) {
+            printf("| %-2d. | %-50s |\n", i+1, hotel_name[i]);
+        }
+
+        char message1[] = "Enter the starting hotel: ";
+        char message2[] = "Enter the ending hotel: ";
+
+        int starting = userInputInt(message1, 1, current_num_hotels) - 1; // get user's choice of starting hotel 
+        int ending;
+
+        while (true) {
+            ending = userInputInt(message2, 1, current_num_hotels) - 1; // -1 to 0 based index
+            if (starting != ending) { //check ending hotel to make sure is different from the starting one
+                break;
+            } else {
+                printf("\nStarting and Ending hotels cannot be the same.\nPlease try again.\n");
+            }
+        }
+
+        int prev [MAX_HOTELS_NUM]; //array to store previous path 
+        int shortestDistance = dijkstra(hotel_paths, current_num_hotels, starting, ending, prev); // call dijkstra function to find the shortest distance
+
+        if (shortestDistance == INF) { //if INF then let user now there is no path between selected hotels
+            printf("\nThere is no path from %s to %s.\n", hotel_name[starting], hotel_name[ending]);
+        } else {
+            printf("\nShortest distance from %s to %s is: %d meters\n", hotel_name[starting], hotel_name[ending], shortestDistance);
+            printf("Path : ");
+            int path[MAX_HOTELS_NUM], pathLen = 0;
+            for (int v = ending; v != -1; v = prev[v]) { //start at ending and end at -1 which is the starting point
+                path[pathLen++] = v; //store path array in reverse order
+            }
+            for (int i = pathLen - 1; i >= 0; i--) { //iterate path backward to print in a correct order
+                printf("%s", hotel_name[path[i]]);
+                if (i > 0) {
+                  printf(" -> ");
+                }
+            }
+            printf("\n");
+        }
+    } else {
+        printf("\nCurrent number of hotels is less than 2.\nYou cannot find a path between hotels.\n");
+    }
+}
 
 int main()
 {
@@ -355,19 +934,42 @@ int main()
             break;
         
         case 3:
-            printf("\nIn 3\n");
+            int *temp_id, *temp_price, *temp_rating, *temp_dist;
+
+            char**temp_name;
+        
+            createTempHotelData(current_num_hotels, hotel_id, hotel_name, hotel_price, hotel_rating, hotel_cityCenter_dist, &temp_id, &temp_name, &temp_price, &temp_rating, &temp_dist);
+            BubleSort(current_num_hotels, temp_id, temp_name, temp_price, temp_rating, temp_dist);
+            freeTempHotelData(current_num_hotels, temp_id, temp_name, temp_price, temp_rating, temp_dist);
+
             break;
         
         case 4:
-            printf("\nIn 4\n");
+            SortByRatingUsingMerge(current_num_hotels, hotel_id, hotel_name, hotel_price, hotel_rating, hotel_cityCenter_dist);
+
             break;
         
         case 5:
-            printf("\nIn 5\n");
+            searchHotelByName(current_num_hotels, hotel_id, hotel_name, hotel_price, hotel_rating, hotel_cityCenter_dist);
+
             break;
         
         case 6:
-            printf("\nIn 6\n");
+            if (current_num_hotels == 0) {  // Error handling 
+                printf("\nNo hotels available. Please add hotels first.\n");
+                printLine();
+            } else {
+
+                char message[] = "Enter your budget: ";
+                int budget = userInputInt(message, 1, 99999);
+                int *selected = (int *)malloc(current_num_hotels * sizeof(int));  //dynamic array to trach which hotel is chosen
+                for (int i = 0; i < current_num_hotels; i++) {
+                    selected[i] = 0; //set all hotal to not visited
+                }
+                knapsack(current_num_hotels, budget, hotel_price, hotel_rating, hotel_name, selected);
+                free(selected);
+            }
+
             break;
         
         case 7:
@@ -376,7 +978,8 @@ int main()
             break;
         
         case 8:
-            printf("\nIn 8\n");
+            findShortestPath(current_num_hotels, hotel_name, hotel_paths);
+
             break;
         
         case 9: 
