@@ -155,7 +155,7 @@ int addHotels(int current_num_hotels, int* hotel_id, char** hotel_name, int* hot
     // Obtain user input about the amount of hotels to record at a time
     int num_hotels = userInputInt(message, 1, 10);
 
-    // Check whether 
+    // Check whether number of hotels entered reached the limit of database
     if (num_hotels + current_num_hotels > MAX_HOTELS_NUM)
     {
         printf("\nNumber of hotels data wished to enter has exceed database limits");
@@ -241,8 +241,11 @@ void addPathToHotels(int current_num_hotels, char** hotel_name, int** hotel_path
 
         char message3[] = "Enter the distance of the path between 2 hotels choosen (1m - 10000m): ";
 
+        // Let user input the distance between paths of choosen hotel 
+        // Minimum distance of 1 meters and maximum of 10,000 meters
         int user_dist_input = userInputInt(message3, 1, 10000);
 
+        // Save the results into the distance table
         hotel_paths[user_first_input-1][user_second_input-1] = user_dist_input;
         hotel_paths[user_second_input-1][user_first_input-1] = user_dist_input;
 
@@ -261,6 +264,7 @@ void viewHotels(int current_num_hotels, int* hotel_id, char** hotel_name, int* h
     // If current number of hotels are 0, do not print viewing table
     if (current_num_hotels != 0)
     {
+        // Print out the information of hotels such as ID, name, price, rating and distance from city center
         printf("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Details of Hotels ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
         printf("| No. |     ID     |                     Hotel Name                     |   Price  | Rating |  Distance |\n");
 
@@ -275,7 +279,7 @@ void viewHotels(int current_num_hotels, int* hotel_id, char** hotel_name, int* h
         }
         printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
 
-
+        // Print out the distance of paths between hotels
         printf("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Distance Between Hotels ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
 
         printf("|      ");
@@ -957,7 +961,7 @@ int main()
         hotel_paths[i] = (int *)malloc(MAX_HOTELS_NUM * sizeof(int));
     }
 
-    // Initialize all hotel paths to be non-existent by using self declared infinity 
+    // Initialize all hotel paths to be non-existent by using self declared infinity value
     for (int i = 0; i < MAX_HOTELS_NUM; i++)
     {
         for (int j = 0; j < MAX_HOTELS_NUM; j++)
@@ -975,32 +979,32 @@ int main()
         
         switch (user_input)
         {
-        case 1:
+        case 1: // 1. Add hotels
             current_num_hotels = addHotels(current_num_hotels, hotel_id, hotel_name, hotel_price, hotel_rating, hotel_cityCenter_dist);
 
             break;
         
-        case 2:
+        case 2: // 2. View All Hotels
             viewHotels(current_num_hotels, hotel_id, hotel_name, hotel_price, hotel_rating, hotel_cityCenter_dist, hotel_paths);
 
             break;
         
-        case 3:
+        case 3: // 3. Sort Hotels by Prices using Bubble Sort 
             sortByPriceUsingBubble(current_num_hotels, hotel_id, hotel_name, hotel_price, hotel_rating, hotel_cityCenter_dist);
 
             break;
         
-        case 4:
+        case 4: // 4. Sort Hotels By Rating using Merge Sort
             SortByRatingUsingMerge(current_num_hotels, hotel_id, hotel_name, hotel_price, hotel_rating, hotel_cityCenter_dist);
 
             break;
         
-        case 5:
+        case 5: // 5. Seach Hotels by Name using Binary Search
             searchHotelByName(current_num_hotels, hotel_id, hotel_name, hotel_price, hotel_rating, hotel_cityCenter_dist);
 
             break;
         
-        case 6:
+        case 6: // 6. Search For Optimal Hotels by Rating Within Budget Using Knapsack
             if (current_num_hotels == 0) {  // Error handling 
                 printf("\nNo hotels available. Please add hotels first.\n");
                 printLine();
@@ -1018,17 +1022,17 @@ int main()
 
             break;
         
-        case 7:
+        case 7: // 7. Add Paths Between Hotels
             addPathToHotels(current_num_hotels, hotel_name, hotel_paths);
 
             break;
         
-        case 8:
+        case 8: // 8. Find Shortest Path Between Hotels
             findShortestPath(current_num_hotels, hotel_name, hotel_paths);
 
             break;
         
-        case 9: 
+        case 9: // 9. Exit Program
             printf("\nThank you for using the Smart Travel Planner System");
             printf("\nWe hope you have a great time travelling!\n");
 
