@@ -308,6 +308,8 @@ void viewHotels(int current_num_hotels, int* hotel_id, char** hotel_name, int* h
         printLine();
     }
 }
+
+// Function to view sorted and search hotel
 void viewSortSearchHotels(int current_num_hotels, int* hotel_id, char** hotel_name, int* hotel_price, int* hotel_rating, int* hotel_cityCenter_dist)
 {
     // If current number of hotels are 0, do not print viewing table
@@ -320,9 +322,9 @@ void viewSortSearchHotels(int current_num_hotels, int* hotel_id, char** hotel_na
         {
             printf("| %-2d  |", i+1); // Print No.
             printf(" %-10d |", hotel_id[i]); // Print hotel ID
-            printf(" %-50s |", hotel_name[i]);
-            printf(" RM %-5d |", hotel_price[i]);
-            printf(" %d star |", hotel_rating[i]);
+            printf(" %-50s |", hotel_name[i]);// Print hotel Name
+            printf(" RM %-5d |", hotel_price[i]);//Print hotel Price
+            printf(" %d star |", hotel_rating[i]);//Print hotel Rating
             printf("  %-5d m  |\n", hotel_cityCenter_dist[i]);
         }
         printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
@@ -335,6 +337,7 @@ void viewSortSearchHotels(int current_num_hotels, int* hotel_id, char** hotel_na
     }
 }
 
+// Function to create temporary hotel data for sorting and searching hotel
 void createTempHotelData(int current_num_hotels, int* hotel_id, char** hotel_name, int* hotel_price, int* hotel_rating, int* hotel_cityCenter_dist, int** temp_id, char*** temp_name, int** temp_price, int** temp_rating, int** temp_dist) {
     // Allocate memory
     *temp_id = (int*)malloc(current_num_hotels * sizeof(int));
@@ -355,6 +358,7 @@ void createTempHotelData(int current_num_hotels, int* hotel_id, char** hotel_nam
     }
 }
 
+//Function to free the memory after use
 void freeTempHotelData(int current_num_hotels, int* temp_id, char** temp_name, int* temp_price, int* temp_rating, int* temp_dist) {
     for (int i = 0; i < current_num_hotels; i++) {
         free(temp_name[i]);
@@ -367,7 +371,7 @@ void freeTempHotelData(int current_num_hotels, int* temp_id, char** temp_name, i
     free(temp_dist);
 }
 
-
+//Function to execute Bubble Sort
 void BubleSort(int current_num_hotels, int* temp_id, char** temp_name, int* temp_price, int* temp_rating, int* temp_dist) {
     for(int i = 0; i < current_num_hotels - 1; i++) {  // Changed to current_num_hotels - 1
         for(int j = 0; j < current_num_hotels - i - 1; j++) {  // Changed to current_num_hotels - i - 1
@@ -399,8 +403,30 @@ void BubleSort(int current_num_hotels, int* temp_id, char** temp_name, int* temp
             }
         }
     }
+}
 
+//Function to prepare data, call bubble sot and show sorted results
+void sortByPriceUsingBubble(int current_num_hotels, int* hotel_id, char** hotel_name, int* hotel_price, int* hotel_rating, int* hotel_cityCenter_dist){
+    if (current_num_hotels == 0) {
+        printf("\nNo hotels available to sort.\n");
+        return;
+    }
+
+    // Create temp data
+    int *temp_id, *temp_price, *temp_rating, *temp_dist;
+    char **temp_name;
+
+    createTempHotelData(current_num_hotels, hotel_id, hotel_name, hotel_price, hotel_rating, hotel_cityCenter_dist,
+                        &temp_id, &temp_name, &temp_price, &temp_rating, &temp_dist);
+
+    // Perform bubble sort by price
+    BubleSort(current_num_hotels, temp_id, temp_name, temp_price, temp_rating, temp_dist);
+
+    // Display sorted results
     viewSortSearchHotels(current_num_hotels, temp_id, temp_name, temp_price, temp_rating, temp_dist);
+
+    // Free temp data
+    freeTempHotelData(current_num_hotels, temp_id, temp_name, temp_price, temp_rating, temp_dist);
 }
 
 // Re-wrote strcasecmp function due to it not available in the C standard library for certain standards
@@ -473,6 +499,7 @@ void freeMergeTempPointers(int* L_id, int* R_id, int* L_price, int* R_price, int
     free(R_name);
 }
 
+// Function to merge sorted subarrays by rating
 void mergeByRating(int left, int mid, int right, int* temp_id, char** temp_name, int* temp_price, int* temp_rating, int* temp_dist){
     int n1 = mid - left + 1;
     int n2 = right - mid;
@@ -511,6 +538,7 @@ void mergeByRating(int left, int mid, int right, int* temp_id, char** temp_name,
 
     int i = 0, j = 0, k = left;
 
+    //Merge left and right array based on rating(descending)
     while (i < n1 && j < n2) {
         if (L_rating[i] >= R_rating[j]) {
             temp_id[k] = L_id[i];
@@ -530,6 +558,7 @@ void mergeByRating(int left, int mid, int right, int* temp_id, char** temp_name,
         k++;
     }
 
+    //Copy any remaining elements from left side
     while (i < n1) {
         temp_id[k] = L_id[i];
         temp_price[k] = L_price[i];
@@ -539,6 +568,7 @@ void mergeByRating(int left, int mid, int right, int* temp_id, char** temp_name,
         i++; k++;
     }
 
+    //Copy any remaining elements from right side
     while (j < n2) {
         temp_id[k] = R_id[j];
         temp_price[k] = R_price[j];
@@ -551,6 +581,7 @@ void mergeByRating(int left, int mid, int right, int* temp_id, char** temp_name,
     freeMergeTempPointers(L_id, R_id, L_price, R_price, L_rating, R_rating, L_dist, R_dist, L_name, R_name, n1, n2);
 }
 
+//Function to divide array, recursively sort and merge
 void mergeSortByRating(int left, int right, int* temp_id, char** temp_name, int* temp_price, int* temp_rating, int* temp_dist){
     if (left < right) {
         int mid = left + (right - left) / 2;
@@ -560,11 +591,8 @@ void mergeSortByRating(int left, int right, int* temp_id, char** temp_name, int*
     }
 }
 
-void SortByRatingUsingMerge(
-    int current_num_hotels,
-    int* hotel_id, char** hotel_name, int* hotel_price,
-    int* hotel_rating, int* hotel_cityCenter_dist
-) {
+//Function to prepare data, call sorting and show results
+void SortByRatingUsingMerge(int current_num_hotels, int* hotel_id, char** hotel_name, int* hotel_price, int* hotel_rating, int* hotel_cityCenter_dist) {
     if (current_num_hotels == 0) {
         printf("\nNo hotels available to sort.\n");
         return;
@@ -587,6 +615,7 @@ void SortByRatingUsingMerge(
     freeTempHotelData(current_num_hotels, temp_id, temp_name, temp_price, temp_rating, temp_dist);
 }
 
+//Functio to find a target name on sorted hotel names
 int binarySearchByName(char** temp_name, int current_num_hotels, char* target_name) {
     int left = 0, right = current_num_hotels - 1;
 
@@ -604,10 +633,7 @@ int binarySearchByName(char** temp_name, int current_num_hotels, char* target_na
     return -1;
 }
 
-void mergeByName(
-    int left, int mid, int right,
-    int* id, char** name, int* price, int* rating, int* dist
-) {
+void mergeByName(int left, int mid, int right, int* id, char** name, int* price, int* rating, int* dist) {
     int n1 = mid - left + 1;
     int n2 = right - mid;
 
@@ -675,6 +701,7 @@ void mergeByName(
     freeMergeTempPointers(L_id, R_id, L_price, R_price, L_rating, R_rating, L_dist, R_dist, L_name, R_name, n1, n2);
 }
 
+//Recursicely divide and merge the hotel data by name using merge sort
 void mergeSortByName(int left, int right, int* id, char** name, int* price, int* rating, int* dist) {
     if (left < right) {
         int mid = left + (right - left) / 2;
@@ -684,6 +711,7 @@ void mergeSortByName(int left, int right, int* id, char** name, int* price, int*
     }
 }
 
+//Function to prepare sorted data, gets user input, perform binary saerching and display results
 void searchHotelByName(int current_num_hotels, int* hotel_id, char** hotel_name, int* hotel_price, int* hotel_rating, int* hotel_cityCenter_dist) {
     if (current_num_hotels == 0) {
         printf("\nNo hotels to search.\n");
@@ -691,35 +719,50 @@ void searchHotelByName(int current_num_hotels, int* hotel_id, char** hotel_name,
     }
 
     char target_name[MAX_NAME_CHARS];
-    printf("\nEnter the name of hotel to search: ");
-    fgets(target_name, MAX_NAME_CHARS, stdin);
-    if (strchr(target_name, '\n')) *strchr(target_name, '\n') = '\0'; // Remove newline
+    char choice;
 
-    // Prepare temp data
+    // Prepare temp data (we only sort once for performance)
     int *temp_id, *temp_price, *temp_rating, *temp_dist;
     char **temp_name;
 
-    createTempHotelData(current_num_hotels, hotel_id, hotel_name, hotel_price, hotel_rating, hotel_cityCenter_dist,
-                        &temp_id, &temp_name, &temp_price, &temp_rating, &temp_dist);
+    createTempHotelData(current_num_hotels, hotel_id, hotel_name, hotel_price, hotel_rating, hotel_cityCenter_dist, &temp_id, &temp_name, &temp_price, &temp_rating, &temp_dist);
 
-    // Sort by name first
+    // Sort once before search
     mergeSortByName(0, current_num_hotels - 1, temp_id, temp_name, temp_price, temp_rating, temp_dist);
 
-    // Perform binary search
-    int idx = binarySearchByName(temp_name, current_num_hotels, target_name);
+    do {
+        // Prompt user input
+        printf("\nEnter the name of hotel to search: ");
+        fgets(target_name, MAX_NAME_CHARS, stdin);
 
-    if (idx != -1) {
-        printf("\nHotel found!\n");
-        printf("|     ID     |                     Hotel Name                     |   Price  | Rating |  Distance |\n");
-        printf("| %-10d | %-50s | RM %-5d | %d star |  %-5d m  |\n",
-               temp_id[idx], temp_name[idx], temp_price[idx], temp_rating[idx], temp_dist[idx]);
-    } else {
-        printf("\nHotel '%s' not found.\n", target_name);
-    }
+        // Remove newline character from input
+        char* newline = strchr(target_name, '\n');
+        if (newline) *newline = '\0';
+
+        // Perform binary search
+        int idx = binarySearchByName(temp_name, current_num_hotels, target_name);
+
+        if (idx != -1) {
+            // Hotel found
+            printf("\nHotel found!\n");
+            printf("|     ID     |                     Hotel Name                     |   Price  | Rating |  Distance |\n");
+            printf("| %-10d | %-50s | RM %-5d | %d star |  %-5d m  |\n",
+                   temp_id[idx], temp_name[idx], temp_price[idx], temp_rating[idx], temp_dist[idx]);
+            break;  // Exit loop after success
+        } else {
+            // Hotel not found
+            printf("\nHotel '%s' not found.", target_name);
+            printf("\nWould you like to try again? (Y/N): ");
+            scanf(" %c", &choice);
+            getchar();  // Clear newline from input buffer
+
+        }
+    } while (choice == 'Y' || choice == 'y');
 
     // Cleanup
     freeTempHotelData(current_num_hotels, temp_id, temp_name, temp_price, temp_rating, temp_dist);
 }
+
 
 // Knapsack function to select best combination of hotels within budget
 void knapsack(int n, int budget, int *prices, int *ratings, char **hotel_name, int *selected) {
@@ -943,13 +986,7 @@ int main()
             break;
         
         case 3:
-            int *temp_id, *temp_price, *temp_rating, *temp_dist;
-
-            char**temp_name;
-        
-            createTempHotelData(current_num_hotels, hotel_id, hotel_name, hotel_price, hotel_rating, hotel_cityCenter_dist, &temp_id, &temp_name, &temp_price, &temp_rating, &temp_dist);
-            BubleSort(current_num_hotels, temp_id, temp_name, temp_price, temp_rating, temp_dist);
-            freeTempHotelData(current_num_hotels, temp_id, temp_name, temp_price, temp_rating, temp_dist);
+            sortByPriceUsingBubble(current_num_hotels, hotel_id, hotel_name, hotel_price, hotel_rating, hotel_cityCenter_dist);
 
             break;
         
