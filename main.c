@@ -836,7 +836,7 @@ void knapsack(int n, int budget, int *prices, int *ratings, char **hotel_name, i
         }
     }
     if (!any_selected) {
-        printf("None");
+        printf("| None|                    None                            |  None       |   None      |\n");
     }
     printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
 
